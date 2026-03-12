@@ -1,0 +1,13 @@
+# Конфиг Supabase CLI. project_ref подставится при выполнении supabase link.
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+
+[functions]
+# Секреты (TELEGRAM_BOT_TOKEN, JWT_SECRET) задаются в Dashboard → Edge Functions → Secrets
+# или через: supabase secrets set TELEGRAM_BOT_TOKEN=xxx
