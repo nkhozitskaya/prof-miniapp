@@ -29,7 +29,7 @@ function toHex(buffer: ArrayBuffer): string {
   return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-function validateInitData(initData: string, botToken: string): Record<string, string> | null {
+async function validateInitData(initData: string, botToken: string): Promise<Record<string, string> | null> {
   const params = new URLSearchParams(initData)
   const hash = params.get('hash')
   if (!hash) return null
