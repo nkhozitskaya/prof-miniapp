@@ -31,17 +31,26 @@ export const AuthPage = () => {
       navigate('/profile', { replace: true })
       return
     }
-    authTelegram(getInitData())
-      .then(({ user: apiUser, token }) => {
-        const u = apiUserToUser(apiUser)
-        setUser(u, token)
-        setTelegramLoading(false)
-        navigate('/profile', { replace: true })
-      })
-      .catch((e) => {
-        setTelegramError(e instanceof Error ? e.message : 'Ошибка входа')
-        setTelegramLoading(false)
-      })
+    const BASE = import.meta.env.VITE_API_URL ?? ''
+    if (!BASE) {
+      setTelegramError('Не настроен сервер. Используйте приложение в браузере.')
+      setTelegramLoading(false)
+      return
+    }
+    const timer = setTimeout(() => {
+      authTelegram(getInitData())
+        .then(({ user: apiUser, token }) => {
+          const u = apiUserToUser(apiUser)
+          setUser(u, token)
+          setTelegramLoading(false)
+          navigate('/profile', { replace: true })
+        })
+        .catch((e) => {
+          setTelegramError(e instanceof Error ? e.message : 'Ошибка входа')
+          setTelegramLoading(false)
+        })
+    }, 200)
+    return () => clearTimeout(timer)
   }, [navigate, setUser])
 
   const onSubmit = (e: FormEvent) => {
