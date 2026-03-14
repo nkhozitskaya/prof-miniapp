@@ -129,11 +129,16 @@ export const ProfilePage = () => {
           className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
           onClick={() => navigate('/diagnostic')}
         >
-          Пройти диагностику
+          {results.length > 0 ? 'Пройти диагностику заново' : 'Пройти диагностику'}
         </button>
+        {results.length > 0 && (
+          <p className="text-xs text-slate-400 text-center">
+            Результат обновится, предыдущий не сохраняется.
+          </p>
+        )}
 
         <section className="bg-slate-800 rounded-xl p-4">
-          <h2 className="text-lg font-semibold mb-2">Результаты диагностики</h2>
+          <h2 className="text-lg font-semibold mb-2">Результат диагностики</h2>
           {loading && (
             <p className="text-sm text-slate-400">Загрузка...</p>
           )}

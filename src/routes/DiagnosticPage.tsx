@@ -87,9 +87,14 @@ export const DiagnosticPage = () => {
         </header>
 
         {step === 0 && (
-          <p className="mt-3 text-sm text-slate-300 shrink-0">
-            {DIAGNOSTIC_INSTRUCTION}
-          </p>
+          <div className="mt-3 space-y-2 shrink-0">
+            <p className="text-sm text-slate-300">
+              {DIAGNOSTIC_INSTRUCTION}
+            </p>
+            <p className="text-xs text-slate-400">
+              При повторном прохождении текущий результат будет обновлён.
+            </p>
+          </div>
         )}
 
         <div className="mt-4 flex-1">
