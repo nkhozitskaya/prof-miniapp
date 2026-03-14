@@ -2,8 +2,11 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { readyTelegram } from './lib/telegram'
+import { AppLayout } from './components/AppLayout'
 import { AuthPage } from './routes/AuthPage'
+import { HomeRedirect } from './routes/HomeRedirect'
 import { ProfilePage } from './routes/ProfilePage'
+import { ProfessionsPage } from './routes/ProfessionsPage'
 import { DiagnosticPage } from './routes/DiagnosticPage'
 
 const queryClient = new QueryClient()
@@ -21,10 +24,14 @@ function AppInit() {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<HomeRedirect />} />
       <Route path="/auth" element={<AuthPage />} />
-      <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/diagnostic" element={<DiagnosticPage />} />
-      <Route path="*" element={<Navigate to="/auth" replace />} />
+      <Route element={<AppLayout />}>
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="professions" element={<ProfessionsPage />} />
+        <Route path="diagnostic" element={<DiagnosticPage />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
