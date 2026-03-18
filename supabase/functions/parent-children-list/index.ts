@@ -1,0 +1,111 @@
+// Supabase Edge Function: list children linked to parent.
+// Authorization: Bearer <token> (token from telegram-auth).
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const cors = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+}
+
+function encode(s: string): Uint8Array {
+  return new TextEncoder().encode(s)
+}
+
+function decodeBase64Url(b64: string): string {
+  const pad = b64.length % 4
+  const padded = pad ? b64 + '='.repeat(4 - pad) : b64
+  const binary = atob(padded.replace(/-/g, '+').replace(/_/g, '/'))
+  return new TextDecoder().decode(new Uint8Array([...binary].map((c) => c.charCodeAt(0))))
+}
+
+async function verifyToken(token: string, secret: string): Promise<{ sub: string } | null> {
+  const parts = token.split('.')
+  if (parts.length !== 2) return null
+  const [payloadB64, sigB64] = parts
+  let payloadStr: string
+  try {
+    payloadStr = decodeBase64Url(payloadB64)
+  } catch {
+    return null
+  }
+  const payload = JSON.parse(payloadStr) as { sub?: string; exp?: number }
+  if (!payload.sub || typeof payload.exp !== 'number') return null
+  if (payload.exp < Date.now() / 1000) return null
+  const key = await crypto.subtle.importKey('raw', encode(secret), { name: 'HMAC', hash: 'SHA-256' }, true, ['sign'])
+  const sig = await crypto.subtle.sign('HMAC', key, encode(payloadStr))
+  const expectedB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+  if (sigB64 !== expectedB64) return null
+  return { sub: payload.sub }
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: cors })
+  if (req.method !== 'GET') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const auth = req.headers.get('Authorization')
+  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'Missing token' }), {
+      status: 401,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const secret = Deno.env.get('JWT_SECRET') ?? Deno.env.get('SUPABASE_JWT_SECRET') ?? 'change-me'
+  const payload = await verifyToken(token, secret)
+  if (!payload) {
+    return new Response(JSON.stringify({ error: 'Invalid or expired token' }), {
+      status: 401,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
+
+  const { data: links, error: linksError } = await supabase
+    .from('parent_child_links')
+    .select('child_user_id, status, created_at, revoked_at')
+    .eq('parent_user_id', payload.sub)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+
+  if (linksError) {
+    return new Response(JSON.stringify({ error: linksError.message }), {
+      status: 500,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const childIds = (links ?? []).map((l) => l.child_user_id as string)
+  if (childIds.length === 0) {
+    return new Response(JSON.stringify([]), { headers: { ...cors, 'Content-Type': 'application/json' } })
+  }
+
+  const { data: children, error: childrenError } = await supabase
+    .from('users')
+    .select('id, telegram_user_id, first_name, last_name, username, created_at')
+    .in('id', childIds)
+
+  if (childrenError) {
+    return new Response(JSON.stringify({ error: childrenError.message }), {
+      status: 500,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  // Preserve link order
+  const byId = new Map((children ?? []).map((c) => [c.id as string, c]))
+  const list = childIds.map((id) => byId.get(id)).filter(Boolean)
+  return new Response(JSON.stringify(list), { headers: { ...cors, 'Content-Type': 'application/json' } })
+})
+

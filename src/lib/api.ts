@@ -65,3 +65,164 @@ export async function saveDiagnosticResult(
   }
   return res.json()
 }
+
+export type ChildListItem = {
+  id: string
+  telegram_user_id: number
+  first_name: string | null
+  last_name: string | null
+  username: string | null
+  created_at: string
+}
+
+export async function parentCreateLinkInvite(token: string, opts?: { days?: number; maxUses?: number }) {
+  const res = await fetch(`${BASE}/functions/v1/parent-link-invite-create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(opts ?? {}),
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Invite create failed: ${res.status}`)
+  }
+  return res.json() as Promise<{ code: string; expires_at: string; max_uses: number; uses: number }>
+}
+
+export async function childAcceptLink(token: string, code: string) {
+  const res = await fetch(`${BASE}/functions/v1/child-link-accept`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ code }),
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Link failed: ${res.status}`)
+  }
+  return res.json() as Promise<{ ok: true; parent_user_id: string; child_user_id: string }>
+}
+
+export async function parentListChildren(token: string): Promise<ChildListItem[]> {
+  const res = await fetch(`${BASE}/functions/v1/parent-children-list`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Children list failed: ${res.status}`)
+  }
+  return res.json() as Promise<ChildListItem[]>
+}
+
+export async function childListParents(token: string): Promise<ChildListItem[]> {
+  const res = await fetch(`${BASE}/functions/v1/child-parents-list`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Parents list failed: ${res.status}`)
+  }
+  return res.json() as Promise<ChildListItem[]>
+}
+
+export async function parentGetChildDashboard(token: string, childId: string) {
+  const url = new URL(`${BASE}/functions/v1/parent-child-dashboard`)
+  url.searchParams.set('child_id', childId)
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Dashboard failed: ${res.status}`)
+  }
+  return res.json() as Promise<{
+    child: ChildListItem | null
+    child_diagnostic: any | null
+    profession_trials: any[]
+    entitlements: any[]
+    parent_assessment: any | null
+    purchase_requests: any[]
+  }>
+}
+
+export async function trackProfessionTrial(token: string, payload: { professionId: string; status: 'started' | 'completed' | 'cancelled'; result?: unknown }) {
+  const res = await fetch(`${BASE}/functions/v1/profession-trial`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Track failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+export type PurchaseRequestRow = {
+  id: string
+  sku: string
+  status: 'requested' | 'approved' | 'declined' | 'paid'
+  created_at: string
+  updated_at: string
+  child_user_id: string
+  parent_user_id: string
+}
+
+export async function createPurchaseRequest(token: string, parentUserId: string, sku: string): Promise<PurchaseRequestRow> {
+  const res = await fetch(`${BASE}/functions/v1/purchase-request`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action: 'create', parentUserId, sku }),
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Request create failed: ${res.status}`)
+  }
+  return res.json() as Promise<PurchaseRequestRow>
+}
+
+export async function updatePurchaseRequest(token: string, requestId: string, status: 'approved' | 'declined' | 'paid'): Promise<PurchaseRequestRow> {
+  const res = await fetch(`${BASE}/functions/v1/purchase-request`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action: 'update', requestId, status }),
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Request update failed: ${res.status}`)
+  }
+  return res.json() as Promise<PurchaseRequestRow>
+}
+
+export async function grantEntitlement(token: string, childUserId: string, sku: string, source: string = 'grant') {
+  const res = await fetch(`${BASE}/functions/v1/purchase-request`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action: 'grant', childUserId, sku, source }),
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Grant failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function listPurchaseRequests(token: string, scope: 'child' | 'parent'): Promise<PurchaseRequestRow[]> {
+  const url = new URL(`${BASE}/functions/v1/purchase-request`)
+  url.searchParams.set('scope', scope)
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Request list failed: ${res.status}`)
+  }
+  return res.json() as Promise<PurchaseRequestRow[]>
+}

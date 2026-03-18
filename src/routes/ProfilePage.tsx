@@ -137,6 +137,31 @@ export const ProfilePage = () => {
           </p>
         )}
 
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            className="py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
+            onClick={() => navigate('/professions')}
+          >
+            Профессии
+          </button>
+          <button
+            type="button"
+            className="py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
+            onClick={() => navigate('/link-parent')}
+          >
+            Привязать родителя
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
+          onClick={() => navigate('/parent')}
+        >
+          Родительский кабинет
+        </button>
+
         <section className="bg-slate-800 rounded-xl p-4">
           <h2 className="text-lg font-semibold mb-2">Результат диагностики</h2>
           {loading && (
