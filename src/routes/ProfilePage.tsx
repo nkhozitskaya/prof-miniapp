@@ -141,14 +141,14 @@ export const ProfilePage = () => {
           <button
             type="button"
             className="py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
-            onClick={() => navigate('/professions')}
+            onClick={() => navigate('/child/professions')}
           >
             Профессии
           </button>
           <button
             type="button"
             className="py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
-            onClick={() => navigate('/link-parent')}
+            onClick={() => navigate('/child/link-parent')}
           >
             Привязать родителя
           </button>

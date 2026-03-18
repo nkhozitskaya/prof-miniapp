@@ -46,6 +46,16 @@ export const ProfessionsPage = () => {
         </p>
       </header>
 
+      <div className="mb-4">
+        <button
+          type="button"
+          className="text-sm text-slate-300 hover:text-white underline"
+          onClick={() => navigate('/child')}
+        >
+          В кабинет
+        </button>
+      </div>
+
       <div className="space-y-6">
         {sections.map(({ tendency, label, professions, isFromResult }) => (
           <section key={tendency} className="space-y-2">

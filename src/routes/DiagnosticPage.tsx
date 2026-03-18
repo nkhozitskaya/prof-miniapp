@@ -54,7 +54,7 @@ export const DiagnosticPage = () => {
         if (save && typeof (save as Promise<unknown>).then === 'function') {
           await (save as Promise<void>)
         }
-        navigate('/profile')
+        navigate('/child')
       } catch (e) {
         console.error(e)
         alert('Не удалось сохранить результат. Проверьте интернет и попробуйте снова.')
@@ -77,7 +77,7 @@ export const DiagnosticPage = () => {
           <button
             type="button"
             className="text-sm text-slate-300 hover:text-white underline"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/child')}
           >
             В ЛК
           </button>

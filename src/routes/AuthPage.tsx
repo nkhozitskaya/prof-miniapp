@@ -2,7 +2,7 @@ import { type FormEvent, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { isTelegram, getInitData } from '../lib/telegram'
-import { getStoredTelegramToken, getStoredTelegramUser } from '../lib/storage'
+import { getStoredRole, getStoredTelegramToken, getStoredTelegramUser } from '../lib/storage'
 import { authTelegram } from '../lib/api'
 
 function apiUserToUser(apiUser: { id: string; first_name: string | null; last_name: string | null; username: string | null }): { id: string; name: string } {
@@ -18,6 +18,13 @@ export const AuthPage = () => {
   const [telegramError, setTelegramError] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  const goAfterAuth = () => {
+    const role = getStoredRole()
+    if (role === 'parent') navigate('/parent', { replace: true })
+    else if (role === 'teen') navigate('/child', { replace: true })
+    else navigate('/', { replace: true })
+  }
+
   useEffect(() => {
     if (!isTelegram() || !getInitData()) {
       setTelegramLoading(false)
@@ -28,7 +35,7 @@ export const AuthPage = () => {
     if (token && storedUser) {
       setUser(storedUser, token)
       setTelegramLoading(false)
-      navigate('/profile', { replace: true })
+      goAfterAuth()
       return
     }
     const BASE = import.meta.env.VITE_API_URL ?? ''
@@ -43,7 +50,7 @@ export const AuthPage = () => {
           const u = apiUserToUser(apiUser)
           setUser(u, token)
           setTelegramLoading(false)
-          navigate('/profile', { replace: true })
+          goAfterAuth()
         })
         .catch((e) => {
           setTelegramError(e instanceof Error ? e.message : 'Ошибка входа')
@@ -64,7 +71,7 @@ export const AuthPage = () => {
     }
 
     setUser(newUser)
-    navigate('/profile')
+    goAfterAuth()
   }
 
   if (isTelegram()) {

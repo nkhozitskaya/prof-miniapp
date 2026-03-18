@@ -2,6 +2,9 @@
 
 const TELEGRAM_TOKEN_KEY = 'prof_app_telegram_token'
 const TELEGRAM_USER_KEY = 'prof_app_telegram_user'
+const ROLE_KEY = 'prof_app_role'
+
+export type AppRole = 'teen' | 'parent'
 
 export function getStoredTelegramToken(): string | null {
   return localStorage.getItem(TELEGRAM_TOKEN_KEY)
@@ -28,4 +31,17 @@ export function getStoredTelegramUser(): { id: string; name: string; age?: numbe
 
 export function setStoredTelegramUser(user: { id: string; name: string; age?: number }): void {
   localStorage.setItem(TELEGRAM_USER_KEY, JSON.stringify(user))
+}
+
+export function getStoredRole(): AppRole | null {
+  const v = localStorage.getItem(ROLE_KEY)
+  return v === 'teen' || v === 'parent' ? v : null
+}
+
+export function setStoredRole(role: AppRole): void {
+  localStorage.setItem(ROLE_KEY, role)
+}
+
+export function clearStoredRole(): void {
+  localStorage.removeItem(ROLE_KEY)
 }

@@ -69,9 +69,9 @@ export function AppLayout() {
             <>
               <button
                 type="button"
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/child')}
                 className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                  path === '/profile' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
+                  path === '/child' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
                 }`}
                 aria-label="Личный кабинет"
               >
@@ -79,9 +79,9 @@ export function AppLayout() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/professions')}
+                onClick={() => navigate('/child/professions')}
                 className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                  path === '/professions' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
+                  path === '/child/professions' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
                 }`}
                 aria-label="Профессии"
               >
@@ -89,9 +89,9 @@ export function AppLayout() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/diagnostic')}
+                onClick={() => navigate('/child/diagnostic')}
                 className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                  path === '/diagnostic' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
+                  path === '/child/diagnostic' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
                 }`}
                 aria-label="Диагностика"
               >
@@ -124,7 +124,7 @@ export function AppLayout() {
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate('/child')}
                 className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors text-slate-400 hover:text-slate-200"
                 aria-label="Вернуться в детский кабинет"
               >

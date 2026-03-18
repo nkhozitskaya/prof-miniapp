@@ -24,7 +24,7 @@ export function LinkParentPage() {
           <button
             type="button"
             className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 font-medium"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/child')}
           >
             В личный кабинет
           </button>
@@ -40,7 +40,7 @@ export function LinkParentPage() {
     setError(null)
     try {
       await childAcceptLink(token, v)
-      navigate('/profile', { replace: true })
+      navigate('/child', { replace: true })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось привязать')
     } finally {
@@ -80,7 +80,7 @@ export function LinkParentPage() {
           <button
             type="button"
             className="w-full py-2 rounded bg-slate-700 hover:bg-slate-600 font-medium"
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/child')}
           >
             Отмена
           </button>
