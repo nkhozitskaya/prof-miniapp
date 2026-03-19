@@ -28,7 +28,7 @@ export function ParentCabinetPage() {
     }
     if (!token) {
       // Parent portal requires Telegram auth token (server mode)
-      navigate('/profile', { replace: true })
+      navigate('/child', { replace: true })
       return
     }
     setLoadingChildren(true)

@@ -27,7 +27,7 @@ export function ParentChildPage() {
       return
     }
     if (!token) {
-      navigate('/profile', { replace: true })
+      navigate('/child', { replace: true })
       return
     }
     if (!childId) {
