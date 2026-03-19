@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { useDiagnosticResults } from '../hooks/useDiagnosticResults'
+import { clearStoredRole } from '../lib/storage'
 import { TENDENCY_LABELS } from '../utils/diagnosticScore'
 import type { DiagnosticResult, LegacyDiagnosticResult, TendencyId } from '../types'
 
@@ -116,8 +117,9 @@ export const ProfilePage = () => {
             type="button"
             className="text-sm text-red-300 hover:text-red-200 underline"
             onClick={() => {
+              clearStoredRole()
               setUser(null)
-              navigate('/auth')
+              navigate('/', { replace: true })
             }}
           >
             Выйти
@@ -126,8 +128,19 @@ export const ProfilePage = () => {
 
         <button
           type="button"
+          className="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
+          onClick={() => {
+            clearStoredRole()
+            navigate('/', { replace: true })
+          }}
+        >
+          Сменить роль
+        </button>
+
+        <button
+          type="button"
           className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
-          onClick={() => navigate('/diagnostic')}
+          onClick={() => navigate('/child/diagnostic')}
         >
           {results.length > 0 ? 'Пройти диагностику заново' : 'Пройти диагностику'}
         </button>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { getStoredTelegramToken } from '../lib/storage'
+import { clearStoredRole, getStoredTelegramToken } from '../lib/storage'
 import { parentCreateLinkInvite, parentListChildren, type ChildListItem } from '../lib/api'
 
 function childLabel(c: ChildListItem): string {
@@ -61,6 +61,17 @@ export function ParentCabinetPage() {
           <h1 className="text-xl font-semibold">Родительский кабинет</h1>
           <p className="text-sm text-slate-300">Здесь можно привязать детей и видеть их прогресс.</p>
         </header>
+
+        <button
+          type="button"
+          className="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
+          onClick={() => {
+            clearStoredRole()
+            navigate('/', { replace: true })
+          }}
+        >
+          Сменить роль
+        </button>
 
         <section className="bg-slate-800 rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { getStoredTelegramToken } from '../lib/storage'
+import { clearStoredRole, getStoredTelegramToken } from '../lib/storage'
 import { parentGetChildDashboard } from '../lib/api'
 import { TENDENCY_LABELS } from '../utils/diagnosticScore'
 
@@ -64,6 +64,17 @@ export function ParentChildPage() {
             К списку
           </button>
         </header>
+
+        <button
+          type="button"
+          className="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
+          onClick={() => {
+            clearStoredRole()
+            navigate('/', { replace: true })
+          }}
+        >
+          Сменить роль
+        </button>
 
         {loading && <p className="text-sm text-slate-400">Загрузка...</p>}
         {error && <p className="text-sm text-red-300">{error}</p>}
