@@ -18,6 +18,17 @@ export type AuthResponse = {
   token: string
 }
 
+export type UserProfile = {
+  user_id: string
+  display_name: string | null
+  age: number | null
+  phone: string | null
+  email: string | null
+  role: 'teen' | 'parent' | null
+  created_at: string
+  updated_at: string
+}
+
 export async function authTelegram(initData: string): Promise<AuthResponse> {
   const res = await fetch(`${BASE}/functions/v1/telegram-auth`, {
     method: 'POST',
@@ -29,6 +40,42 @@ export async function authTelegram(initData: string): Promise<AuthResponse> {
     throw new Error(t || `Auth failed: ${res.status}`)
   }
   return res.json() as Promise<AuthResponse>
+}
+
+export async function getUserProfile(token: string): Promise<UserProfile | null> {
+  const res = await fetch(`${BASE}/functions/v1/user-profile`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Profile load failed: ${res.status}`)
+  }
+  return res.json() as Promise<UserProfile | null>
+}
+
+export async function saveUserProfile(
+  token: string,
+  payload: {
+    displayName?: string
+    age?: number | null
+    phone?: string
+    email?: string
+    role?: 'teen' | 'parent' | null
+  },
+): Promise<UserProfile> {
+  const res = await fetch(`${BASE}/functions/v1/user-profile`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Profile save failed: ${res.status}`)
+  }
+  return res.json() as Promise<UserProfile>
 }
 
 export async function getDiagnosticResults(token: string) {

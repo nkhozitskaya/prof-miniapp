@@ -167,6 +167,19 @@ Deno.serve(async (req) => {
   const jwtSecret = Deno.env.get('JWT_SECRET') ?? Deno.env.get('SUPABASE_JWT_SECRET') ?? 'change-me'
   const token = await signToken({ sub: userId, exp: Math.floor(Date.now() / 1000) + 30 * 24 * 3600 }, jwtSecret)
 
+  // Ensure profile row exists, so account metadata can persist across sessions/devices.
+  const displayName = [row.first_name, row.last_name].filter(Boolean).join(' ') || row.username || null
+  await supabase
+    .from('user_profiles')
+    .upsert(
+      {
+        user_id: userId,
+        display_name: displayName,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' },
+    )
+
   return new Response(
     JSON.stringify({
       user: {

@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { getStoredRole, setStoredRole, type AppRole } from '../lib/storage'
+import { getStoredRole, getStoredTelegramToken, setStoredRole, type AppRole } from '../lib/storage'
+import { saveUserProfile } from '../lib/api'
 
 export function StartPage() {
   const { user } = useUser()
@@ -20,6 +21,10 @@ export function StartPage() {
 
   const pick = (role: AppRole) => {
     setStoredRole(role)
+    const token = getStoredTelegramToken()
+    if (token) {
+      saveUserProfile(token, { role }).catch(() => {})
+    }
     if (!user) {
       navigate('/auth', { replace: true })
     } else {
