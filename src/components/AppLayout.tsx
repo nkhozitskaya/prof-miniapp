@@ -102,11 +102,11 @@ export function AppLayout() {
             <>
               <button
                 type="button"
-                onClick={() => navigate('/parent')}
+                onClick={() => navigate('/parent/diagnostic')}
                 className={`flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                  path === '/parent' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
+                  path === '/parent/diagnostic' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'
                 }`}
-                aria-label="Родительский кабинет"
+                aria-label="Диагностика родителя"
               >
                 <IconParent />
               </button>

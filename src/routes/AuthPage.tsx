@@ -20,8 +20,7 @@ export const AuthPage = () => {
 
   const goAfterAuth = () => {
     const role = getStoredRole()
-    if (role === 'parent') navigate('/parent', { replace: true })
-    else if (role === 'teen') navigate('/child', { replace: true })
+    if (role === 'parent' || role === 'teen') navigate('/onboarding', { replace: true })
     else navigate('/', { replace: true })
   }
 

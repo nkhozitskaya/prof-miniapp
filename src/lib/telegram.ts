@@ -7,6 +7,7 @@ declare global {
         ready: () => void
         expand: () => void
         close: () => void
+        requestContact?: (callback?: (sent: boolean) => void) => void
         themeParams?: {
           bg_color?: string
           text_color?: string
@@ -41,4 +42,17 @@ export function readyTelegram() {
     twa.ready()
     twa.expand()
   }
+}
+
+/** Запросить у пользователя подтверждение передачи телефона в Telegram. */
+export async function requestTelegramContact(): Promise<boolean> {
+  const twa = getWebApp()
+  if (!twa?.requestContact) return false
+  return new Promise((resolve) => {
+    try {
+      twa.requestContact?.((sent) => resolve(Boolean(sent)))
+    } catch {
+      resolve(false)
+    }
+  })
 }

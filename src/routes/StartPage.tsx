@@ -16,7 +16,7 @@ export function StartPage() {
       navigate('/auth', { replace: true })
       return
     }
-    navigate(role === 'parent' ? '/parent' : '/child', { replace: true })
+    navigate('/onboarding', { replace: true })
   }, [navigate, user])
 
   const pick = (role: AppRole) => {
@@ -28,7 +28,7 @@ export function StartPage() {
     if (!user) {
       navigate('/auth', { replace: true })
     } else {
-      navigate(role === 'parent' ? '/parent' : '/child', { replace: true })
+      navigate('/onboarding', { replace: true })
     }
   }
 

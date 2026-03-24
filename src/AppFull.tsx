@@ -5,12 +5,14 @@ import { readyTelegram } from './lib/telegram'
 import { AppLayout } from './components/AppLayout'
 import { AuthPage } from './routes/AuthPage'
 import { StartPage } from './routes/StartPage'
+import { OnboardingPage } from './routes/OnboardingPage'
 import { ProfilePage } from './routes/ProfilePage'
 import { LinkParentPage } from './routes/LinkParentPage'
 import { ProfessionsPage } from './routes/ProfessionsPage'
 import { DiagnosticPage } from './routes/DiagnosticPage'
 import { ParentCabinetPage } from './routes/ParentCabinetPage'
 import { ParentChildPage } from './routes/ParentChildPage'
+import { ParentDiagnosticPage } from './routes/ParentDiagnosticPage'
 
 const queryClient = new QueryClient()
 
@@ -29,6 +31,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<StartPage />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/onboarding" element={<OnboardingPage />} />
       <Route element={<AppLayout />}>
         {/* Child area */}
         <Route path="child" element={<ProfilePage />} />
@@ -37,6 +40,7 @@ function AppRoutes() {
         <Route path="child/diagnostic" element={<DiagnosticPage />} />
 
         {/* Parent area */}
+        <Route path="parent/diagnostic" element={<ParentDiagnosticPage />} />
         <Route path="parent" element={<ParentCabinetPage />} />
         <Route path="parent/children" element={<ParentCabinetPage />} />
         <Route path="parent/child/:childId" element={<ParentChildPage />} />
