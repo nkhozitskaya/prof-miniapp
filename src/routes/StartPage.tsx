@@ -1,23 +1,11 @@
-import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { getStoredRole, getStoredTelegramToken, setStoredRole, type AppRole } from '../lib/storage'
+import { getStoredTelegramToken, setStoredRole, type AppRole } from '../lib/storage'
 import { saveUserProfile } from '../lib/api'
 
 export function StartPage() {
   const { user } = useUser()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    // Если роль уже выбрана — сразу ведём в соответствующий кабинет
-    const role = getStoredRole()
-    if (!role) return
-    if (!user) {
-      navigate('/auth', { replace: true })
-      return
-    }
-    navigate('/onboarding', { replace: true })
-  }, [navigate, user])
 
   const pick = (role: AppRole) => {
     setStoredRole(role)

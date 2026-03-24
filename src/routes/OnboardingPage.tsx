@@ -5,11 +5,6 @@ import { getStoredRole, getStoredTelegramToken, setStoredTelegramUser } from '..
 import { getUserProfile, saveUserProfile } from '../lib/api'
 import { isTelegram, requestTelegramContact } from '../lib/telegram'
 
-function hasRequired(profile: { display_name: string | null; age: number | null; phone: string | null } | null): boolean {
-  if (!profile) return false
-  return Boolean(profile.display_name && profile.display_name.trim() && profile.phone && profile.phone.trim() && profile.age != null)
-}
-
 export function OnboardingPage() {
   const { user, setUser } = useUser()
   const navigate = useNavigate()
@@ -24,6 +19,7 @@ export function OnboardingPage() {
   const [saving, setSaving] = useState(false)
   const [contactConfirming, setContactConfirming] = useState(false)
   const [contactConfirmed, setContactConfirmed] = useState(false)
+  const [step, setStep] = useState<'phone' | 'profile'>('phone')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -62,10 +58,7 @@ export function OnboardingPage() {
         setAge(merged.age != null ? String(merged.age) : '')
         setPhone(merged.phone ?? '')
         setEmail(merged.email ?? '')
-
-        if (hasRequired(p)) {
-          navigate(role === 'parent' ? '/parent/diagnostic' : '/child/diagnostic', { replace: true })
-        }
+        if (p.phone && p.phone.trim()) setContactConfirmed(true)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -77,9 +70,13 @@ export function OnboardingPage() {
     <div className="min-h-screen bg-slate-900 text-white p-4 flex items-center justify-center">
       <div className="w-full max-w-md space-y-4">
         <header className="text-center space-y-1">
-          <h1 className="text-2xl font-semibold">Заполни профиль</h1>
+          <h1 className="text-2xl font-semibold">
+            {step === 'phone' ? 'Подтверди телефон' : 'Данные профиля'}
+          </h1>
           <p className="text-sm text-slate-300">
-            Шаг 2 из 3: телефон и данные {role === 'parent' ? 'родителя' : 'подростка'}.
+            {step === 'phone'
+              ? 'Шаг 2 из 4: подтверждение телефона.'
+              : 'Шаг 3 из 4: имя, возраст и email.'}
           </p>
         </header>
 
@@ -87,109 +84,138 @@ export function OnboardingPage() {
           <div className="text-center text-slate-400">Загрузка...</div>
         ) : (
           <div className="bg-slate-800 rounded-xl p-4 space-y-3">
-            {!isTelegram() && (
-              <input
-                className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="Телефон"
-              />
+            {step === 'phone' ? (
+              <>
+                {!isTelegram() && (
+                  <input
+                    className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Телефон"
+                  />
+                )}
+                {isTelegram() && (
+                  <button
+                    type="button"
+                    disabled={contactConfirming}
+                    className={`w-full py-2 rounded font-medium transition-colors ${
+                      contactConfirming ? 'bg-slate-600 text-slate-300 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600'
+                    }`}
+                    onClick={async () => {
+                      setError(null)
+                      setContactConfirming(true)
+                      const ok = await requestTelegramContact()
+                      setContactConfirming(false)
+                      if (ok) {
+                        setContactConfirmed(true)
+                      } else {
+                        setError('Не удалось подтвердить номер в Telegram. Нажми кнопку снова.')
+                      }
+                    }}
+                  >
+                    {contactConfirming ? 'Запрашиваю...' : contactConfirmed ? 'Телефон подтверждён' : 'Поделиться номером через Telegram'}
+                  </button>
+                )}
+                <p className="text-xs text-slate-400">
+                  В Telegram телефон подтверждается только через кнопку и согласие пользователя.
+                </p>
+                <button
+                  type="button"
+                  className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
+                  onClick={() => {
+                    if (isTelegram() && !contactConfirmed) {
+                      setError('Сначала подтверди номер через кнопку Telegram.')
+                      return
+                    }
+                    if (!isTelegram() && !phone.trim()) {
+                      setError('Укажи телефон.')
+                      return
+                    }
+                    setStep('profile')
+                  }}
+                >
+                  Продолжить
+                </button>
+              </>
+            ) : (
+              <>
+                <input
+                  className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Имя"
+                />
+                <input
+                  type="number"
+                  min={10}
+                  max={99}
+                  className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  placeholder="Возраст"
+                />
+                <input
+                  type="email"
+                  className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email (необязательно)"
+                />
+              </>
             )}
-            {isTelegram() && (
-              <button
-                type="button"
-                disabled={contactConfirming}
-                className={`w-full py-2 rounded font-medium transition-colors ${
-                  contactConfirming ? 'bg-slate-600 text-slate-300 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600'
-                }`}
-                onClick={async () => {
-                  setError(null)
-                  setContactConfirming(true)
-                  const ok = await requestTelegramContact()
-                  setContactConfirming(false)
-                  if (ok) {
-                    setContactConfirmed(true)
-                  } else {
-                    setError('Telegram не передал контакт. Можно ввести телефон вручную.')
-                  }
-                }}
-              >
-                {contactConfirming ? 'Запрашиваю...' : contactConfirmed ? 'Телефон подтверждён в Telegram' : 'Поделиться номером через Telegram'}
-              </button>
-            )}
-            <p className="text-xs text-slate-400">
-              В Telegram телефон подтверждается только через кнопку и согласие пользователя.
-            </p>
-            <input
-              className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Имя"
-            />
-            <input
-              type="number"
-              min={10}
-              max={99}
-              className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              placeholder="Возраст"
-            />
-            <input
-              type="email"
-              className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email (необязательно)"
-            />
 
             {error && <div className="text-sm text-red-300">{error}</div>}
 
-            <button
-              type="button"
-              disabled={saving}
-              className={`w-full py-2 rounded font-medium transition-colors ${
-                saving ? 'bg-slate-600 text-slate-300 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600'
-              }`}
-              onClick={async () => {
-                setError(null)
-                const n = name.trim()
-                const p = phone.trim()
-                const a = age ? Number(age) : NaN
-                if (!n || !Number.isFinite(a) || (isTelegram() ? !contactConfirmed : !p)) {
-                  setError(
-                    isTelegram()
-                      ? 'Подтверди номер через кнопку Telegram, затем продолжи.'
-                      : 'Заполни имя, возраст и телефон.',
-                  )
-                  return
-                }
-                const merged = { ...user, name: n, age: a, phone: p || user.phone, email: email.trim() || undefined, role: role ?? undefined }
-                setUser(merged, token ?? undefined)
-                if (!token) {
-                  navigate(role === 'parent' ? '/parent/diagnostic' : '/child/diagnostic', { replace: true })
-                  return
-                }
-                setSaving(true)
-                try {
-                  await saveUserProfile(token, {
-                    displayName: n,
+            {step === 'profile' && (
+              <button
+                type="button"
+                disabled={saving}
+                className={`w-full py-2 rounded font-medium transition-colors ${
+                  saving ? 'bg-slate-600 text-slate-300 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600'
+                }`}
+                onClick={async () => {
+                  setError(null)
+                  const n = name.trim()
+                  const p = phone.trim()
+                  const a = age ? Number(age) : NaN
+                  if (!n || !Number.isFinite(a)) {
+                    setError('Заполни имя и возраст.')
+                    return
+                  }
+                  const merged = {
+                    ...user,
+                    name: n,
                     age: a,
-                    phone: p,
-                    email: email.trim(),
-                    role: role ?? null,
-                  })
-                  setStoredTelegramUser(merged)
-                  navigate(role === 'parent' ? '/parent/diagnostic' : '/child/diagnostic', { replace: true })
-                } catch (e) {
-                  setError(e instanceof Error ? e.message : 'Ошибка сохранения')
-                } finally {
-                  setSaving(false)
-                }
-              }}
-            >
-              {saving ? 'Сохраняю...' : 'Продолжить'}
-            </button>
+                    phone: (isTelegram() ? (p || user.phone || 'confirmed_by_telegram') : p) || undefined,
+                    email: email.trim() || undefined,
+                    role: role ?? undefined,
+                  }
+                  setUser(merged, token ?? undefined)
+                  if (!token) {
+                    navigate(role === 'parent' ? '/parent' : '/child', { replace: true })
+                    return
+                  }
+                  setSaving(true)
+                  try {
+                    await saveUserProfile(token, {
+                      displayName: n,
+                      age: a,
+                      phone: merged.phone ?? '',
+                      email: email.trim(),
+                      role: role ?? null,
+                    })
+                    setStoredTelegramUser(merged)
+                    navigate(role === 'parent' ? '/parent' : '/child', { replace: true })
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : 'Ошибка сохранения')
+                  } finally {
+                    setSaving(false)
+                  }
+                }}
+              >
+                {saving ? 'Сохраняю...' : 'В личный кабинет'}
+              </button>
+            )}
           </div>
         )}
       </div>
