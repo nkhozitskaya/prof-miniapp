@@ -13,7 +13,6 @@ export function OnboardingPage() {
 
   const [name, setName] = useState('')
   const [age, setAge] = useState('')
-  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,7 +32,6 @@ export function OnboardingPage() {
     }
     setName(user.name ?? '')
     setAge(user.age != null ? String(user.age) : '')
-    setPhone(user.phone ?? '')
     setEmail(user.email ?? '')
 
     if (!token) {
@@ -56,7 +54,6 @@ export function OnboardingPage() {
         setStoredTelegramUser(merged)
         setName(merged.name)
         setAge(merged.age != null ? String(merged.age) : '')
-        setPhone(merged.phone ?? '')
         setEmail(merged.email ?? '')
         if (p.phone && p.phone.trim()) setContactConfirmed(true)
       })
@@ -86,15 +83,7 @@ export function OnboardingPage() {
           <div className="bg-slate-800 rounded-xl p-4 space-y-3">
             {step === 'phone' ? (
               <>
-                {!isTelegram() && (
-                  <input
-                    className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Телефон"
-                  />
-                )}
-                {isTelegram() && (
+                {isTelegram() ? (
                   <button
                     type="button"
                     disabled={contactConfirming}
@@ -115,6 +104,10 @@ export function OnboardingPage() {
                   >
                     {contactConfirming ? 'Запрашиваю...' : contactConfirmed ? 'Телефон подтверждён' : 'Поделиться номером через Telegram'}
                   </button>
+                ) : (
+                  <div className="text-sm text-slate-300 rounded bg-slate-700/50 border border-slate-600 p-3">
+                    Подтверждение номера доступно только внутри Telegram Mini App.
+                  </div>
                 )}
                 <p className="text-xs text-slate-400">
                   В Telegram телефон подтверждается только через кнопку и согласие пользователя.
@@ -123,12 +116,12 @@ export function OnboardingPage() {
                   type="button"
                   className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
                   onClick={() => {
-                    if (isTelegram() && !contactConfirmed) {
-                      setError('Сначала подтверди номер через кнопку Telegram.')
+                    if (!isTelegram()) {
+                      setError('Открой Mini App внутри Telegram и подтверди номер кнопкой.')
                       return
                     }
-                    if (!isTelegram() && !phone.trim()) {
-                      setError('Укажи телефон.')
+                    if (!contactConfirmed) {
+                      setError('Сначала подтверди номер через кнопку Telegram.')
                       return
                     }
                     setStep('profile')
@@ -176,7 +169,6 @@ export function OnboardingPage() {
                 onClick={async () => {
                   setError(null)
                   const n = name.trim()
-                  const p = phone.trim()
                   const a = age ? Number(age) : NaN
                   if (!n || !Number.isFinite(a)) {
                     setError('Заполни имя и возраст.')
@@ -186,7 +178,7 @@ export function OnboardingPage() {
                     ...user,
                     name: n,
                     age: a,
-                    phone: (isTelegram() ? (p || user.phone || 'confirmed_by_telegram') : p) || undefined,
+                    phone: user.phone || 'confirmed_by_telegram',
                     email: email.trim() || undefined,
                     role: role ?? undefined,
                   }
@@ -200,7 +192,7 @@ export function OnboardingPage() {
                     await saveUserProfile(token, {
                       displayName: n,
                       age: a,
-                      phone: merged.phone ?? '',
+                      phone: merged.phone ?? 'confirmed_by_telegram',
                       email: email.trim(),
                       role: role ?? null,
                     })
