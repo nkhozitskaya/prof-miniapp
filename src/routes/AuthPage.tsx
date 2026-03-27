@@ -25,16 +25,16 @@ export const AuthPage = () => {
   }
 
   useEffect(() => {
-    if (!isTelegram()) {
-      setTelegramLoading(false)
-      return
-    }
     const token = getStoredTelegramToken()
     const storedUser = getStoredTelegramUser()
     if (token && storedUser) {
       setUser(storedUser, token)
       setTelegramLoading(false)
       goAfterAuth()
+      return
+    }
+    if (!isTelegram()) {
+      setTelegramLoading(false)
       return
     }
     const BASE = import.meta.env.VITE_API_URL ?? ''

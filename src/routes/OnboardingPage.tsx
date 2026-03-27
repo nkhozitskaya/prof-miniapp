@@ -18,11 +18,15 @@ export function OnboardingPage() {
   const [saving, setSaving] = useState(false)
   const [contactConfirming, setContactConfirming] = useState(false)
   const [contactConfirmed, setContactConfirmed] = useState(false)
-  const [telegramMode, setTelegramMode] = useState(isTelegram())
+  const [telegramMode, setTelegramMode] = useState(Boolean(token) || isTelegram())
   const [step, setStep] = useState<'phone' | 'profile'>('phone')
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (token && !telegramMode) {
+      setTelegramMode(true)
+      return
+    }
     if (telegramMode) return
     let cancelled = false
     let attempts = 0
