@@ -26,6 +26,14 @@ export function isTelegram(): boolean {
   return Boolean(window.Telegram?.WebApp)
 }
 
+/** Более мягкая проверка клиента Telegram (для раннего этапа инициализации WebApp). */
+export function isTelegramClient(): boolean {
+  if (typeof window === 'undefined') return false
+  if (window.Telegram?.WebApp) return true
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  return /Telegram/i.test(ua)
+}
+
 export function getInitData(): string {
   return window.Telegram?.WebApp?.initData ?? ''
 }

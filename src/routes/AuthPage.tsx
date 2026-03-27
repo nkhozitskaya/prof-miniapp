@@ -1,7 +1,7 @@
 import { type FormEvent, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { isTelegram, getInitData } from '../lib/telegram'
+import { isTelegramClient, getInitData } from '../lib/telegram'
 import { getStoredRole, getStoredTelegramToken, getStoredTelegramUser } from '../lib/storage'
 import { authTelegram } from '../lib/api'
 
@@ -14,9 +14,31 @@ export const AuthPage = () => {
   const { user, setUser } = useUser()
   const [name, setName] = useState(user?.name ?? '')
   const [age, setAge] = useState(user?.age?.toString() ?? '')
-  const [telegramLoading, setTelegramLoading] = useState(isTelegram())
+  const [telegramMode, setTelegramMode] = useState(Boolean(getStoredTelegramToken()) || isTelegramClient())
+  const [telegramLoading, setTelegramLoading] = useState(Boolean(getStoredTelegramToken()) || isTelegramClient())
   const [telegramError, setTelegramError] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (telegramMode) return
+    let cancelled = false
+    let attempts = 0
+    const maxAttempts = 40
+    const tick = () => {
+      if (cancelled) return
+      if (isTelegramClient()) {
+        setTelegramMode(true)
+        setTelegramLoading(true)
+        return
+      }
+      attempts += 1
+      if (attempts < maxAttempts) setTimeout(tick, 150)
+    }
+    tick()
+    return () => {
+      cancelled = true
+    }
+  }, [telegramMode])
 
   const goAfterAuth = () => {
     const role = getStoredRole()
@@ -33,7 +55,7 @@ export const AuthPage = () => {
       goAfterAuth()
       return
     }
-    if (!isTelegram()) {
+    if (!telegramMode) {
       setTelegramLoading(false)
       return
     }
@@ -80,7 +102,7 @@ export const AuthPage = () => {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [navigate, setUser])
+  }, [navigate, setUser, telegramMode])
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -96,7 +118,7 @@ export const AuthPage = () => {
     goAfterAuth()
   }
 
-  if (isTelegram()) {
+  if (telegramMode) {
     if (telegramLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white p-4">
