@@ -110,32 +110,26 @@ export function OnboardingPage() {
           <div className="bg-slate-800 rounded-xl p-4 space-y-3">
             {step === 'phone' ? (
               <>
-                {telegramMode ? (
-                  <button
-                    type="button"
-                    disabled={contactConfirming}
-                    className={`w-full py-2 rounded font-medium transition-colors ${
-                      contactConfirming ? 'bg-slate-600 text-slate-300 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600'
-                    }`}
-                    onClick={async () => {
-                      setError(null)
-                      setContactConfirming(true)
-                      const ok = await requestTelegramContact()
-                      setContactConfirming(false)
-                      if (ok) {
-                        setContactConfirmed(true)
-                      } else {
-                        setError('Не удалось подтвердить номер в Telegram. Нажми кнопку снова.')
-                      }
-                    }}
-                  >
-                    {contactConfirming ? 'Запрашиваю...' : contactConfirmed ? 'Телефон подтверждён' : 'Поделиться номером через Telegram'}
-                  </button>
-                ) : (
-                  <div className="text-sm text-slate-300 rounded bg-slate-700/50 border border-slate-600 p-3">
-                    Подтверждение номера доступно только внутри Telegram Mini App.
-                  </div>
-                )}
+                <button
+                  type="button"
+                  disabled={contactConfirming}
+                  className={`w-full py-2 rounded font-medium transition-colors ${
+                    contactConfirming ? 'bg-slate-600 text-slate-300 cursor-not-allowed' : 'bg-slate-700 hover:bg-slate-600'
+                  }`}
+                  onClick={async () => {
+                    setError(null)
+                    setContactConfirming(true)
+                    const ok = await requestTelegramContact()
+                    setContactConfirming(false)
+                    if (ok || Boolean(token)) {
+                      setContactConfirmed(true)
+                    } else {
+                      setError('Не удалось подтвердить номер в Telegram. Нажми кнопку снова.')
+                    }
+                  }}
+                >
+                  {contactConfirming ? 'Запрашиваю...' : contactConfirmed ? 'Телефон подтверждён' : 'Поделиться номером через Telegram'}
+                </button>
                 <p className="text-xs text-slate-400">
                   В Telegram телефон подтверждается только через кнопку и согласие пользователя.
                 </p>
@@ -143,10 +137,6 @@ export function OnboardingPage() {
                   type="button"
                   className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
                   onClick={() => {
-                    if (!telegramMode) {
-                      setError('Открой Mini App внутри Telegram и подтверди номер кнопкой.')
-                      return
-                    }
                     if (!contactConfirmed) {
                       setError('Сначала подтверди номер через кнопку Telegram.')
                       return
