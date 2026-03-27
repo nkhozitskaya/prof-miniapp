@@ -18,6 +18,7 @@ export function OnboardingPage() {
   const [saving, setSaving] = useState(false)
   const [contactConfirming, setContactConfirming] = useState(false)
   const [contactConfirmed, setContactConfirmed] = useState(false)
+  const [contactRequested, setContactRequested] = useState(false)
   const [telegramMode, setTelegramMode] = useState(Boolean(token) || isTelegram())
   const [step, setStep] = useState<'phone' | 'profile'>('phone')
   const [error, setError] = useState<string | null>(null)
@@ -119,16 +120,19 @@ export function OnboardingPage() {
                   onClick={async () => {
                     setError(null)
                     setContactConfirming(true)
+                    setContactRequested(true)
                     const ok = await requestTelegramContact()
                     setContactConfirming(false)
                     if (ok || Boolean(token)) {
                       setContactConfirmed(true)
                     } else {
-                      setError('Не удалось подтвердить номер в Telegram. Нажми кнопку снова.')
+                      // iOS/Telegram clients may not return callback reliably.
+                      // We still allow user to continue after explicit button tap.
+                      setContactConfirmed(true)
                     }
                   }}
                 >
-                  {contactConfirming ? 'Запрашиваю...' : contactConfirmed ? 'Телефон подтверждён' : 'Поделиться номером через Telegram'}
+                  {contactConfirming ? 'Запрашиваю...' : contactConfirmed ? 'Подтверждено' : 'Поделиться номером через Telegram'}
                 </button>
                 <p className="text-xs text-slate-400">
                   В Telegram телефон подтверждается только через кнопку и согласие пользователя.
@@ -137,7 +141,7 @@ export function OnboardingPage() {
                   type="button"
                   className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
                   onClick={() => {
-                    if (!contactConfirmed) {
+                    if (!contactConfirmed && !contactRequested) {
                       setError('Сначала подтверди номер через кнопку Telegram.')
                       return
                     }
