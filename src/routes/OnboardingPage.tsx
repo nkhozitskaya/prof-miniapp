@@ -18,8 +18,31 @@ export function OnboardingPage() {
   const [saving, setSaving] = useState(false)
   const [contactConfirming, setContactConfirming] = useState(false)
   const [contactConfirmed, setContactConfirmed] = useState(false)
+  const [telegramMode, setTelegramMode] = useState(isTelegram())
   const [step, setStep] = useState<'phone' | 'profile'>('phone')
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (telegramMode) return
+    let cancelled = false
+    let attempts = 0
+    const maxAttempts = 40
+    const tick = () => {
+      if (cancelled) return
+      if (isTelegram()) {
+        setTelegramMode(true)
+        return
+      }
+      attempts += 1
+      if (attempts < maxAttempts) {
+        setTimeout(tick, 150)
+      }
+    }
+    tick()
+    return () => {
+      cancelled = true
+    }
+  }, [telegramMode])
 
   useEffect(() => {
     if (!role) {
@@ -83,7 +106,7 @@ export function OnboardingPage() {
           <div className="bg-slate-800 rounded-xl p-4 space-y-3">
             {step === 'phone' ? (
               <>
-                {isTelegram() ? (
+                {telegramMode ? (
                   <button
                     type="button"
                     disabled={contactConfirming}
@@ -116,7 +139,7 @@ export function OnboardingPage() {
                   type="button"
                   className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
                   onClick={() => {
-                    if (!isTelegram()) {
+                    if (!telegramMode) {
                       setError('Открой Mini App внутри Telegram и подтверди номер кнопкой.')
                       return
                     }
