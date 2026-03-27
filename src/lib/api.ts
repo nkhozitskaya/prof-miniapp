@@ -78,6 +78,23 @@ export async function saveUserProfile(
   return res.json() as Promise<UserProfile>
 }
 
+export async function getAccountDebug(token: string) {
+  const res = await fetch(`${BASE}/functions/v1/account-debug`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!res.ok) {
+    const t = await res.text()
+    throw new Error(t || `Account debug failed: ${res.status}`)
+  }
+  return res.json() as Promise<{
+    token_user_id: string
+    users_row: unknown
+    users_error: string | null
+    profile_row: unknown
+    profile_error: string | null
+  }>
+}
+
 export async function getDiagnosticResults(token: string) {
   const res = await fetch(`${BASE}/functions/v1/diagnostic`, {
     headers: { Authorization: `Bearer ${token}` },

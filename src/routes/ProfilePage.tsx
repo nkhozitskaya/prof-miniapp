@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { useDiagnosticResults } from '../hooks/useDiagnosticResults'
 import { getStoredTelegramToken, clearStoredRole, setStoredTelegramUser } from '../lib/storage'
-import { getUserProfile, saveUserProfile } from '../lib/api'
+import { getAccountDebug, getUserProfile, saveUserProfile } from '../lib/api'
 import { TENDENCY_LABELS } from '../utils/diagnosticScore'
 import type { DiagnosticResult, LegacyDiagnosticResult, TendencyId } from '../types'
 
@@ -95,6 +95,7 @@ export const ProfilePage = () => {
   const token = useMemo(() => getStoredTelegramToken(), [])
   const [profileSaving, setProfileSaving] = useState(false)
   const [profileMsg, setProfileMsg] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
   const [profileName, setProfileName] = useState('')
   const [profileAge, setProfileAge] = useState('')
   const [profilePhone, setProfilePhone] = useState('')
@@ -254,6 +255,29 @@ export const ProfilePage = () => {
             {profileSaving ? 'Сохраняю...' : 'Сохранить данные'}
           </button>
           {profileMsg && <p className="text-xs text-slate-300">{profileMsg}</p>}
+          <button
+            type="button"
+            className="w-full py-2 rounded bg-slate-700 hover:bg-slate-600 font-medium transition-colors"
+            onClick={async () => {
+              if (!token) {
+                setDebugInfo('Нет Telegram токена в сессии.')
+                return
+              }
+              try {
+                const d = await getAccountDebug(token)
+                setDebugInfo(JSON.stringify(d, null, 2))
+              } catch (e) {
+                setDebugInfo(e instanceof Error ? e.message : 'Ошибка debug запроса')
+              }
+            }}
+          >
+            Проверить синхронизацию аккаунта
+          </button>
+          {debugInfo && (
+            <pre className="text-[11px] leading-4 p-2 rounded bg-slate-900/60 border border-slate-700 overflow-x-auto whitespace-pre-wrap">
+              {debugInfo}
+            </pre>
+          )}
         </section>
 
         <button
