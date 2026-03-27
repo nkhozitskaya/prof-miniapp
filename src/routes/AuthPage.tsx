@@ -25,7 +25,7 @@ export const AuthPage = () => {
   }
 
   useEffect(() => {
-    if (!isTelegram() || !getInitData()) {
+    if (!isTelegram()) {
       setTelegramLoading(false)
       return
     }
@@ -43,20 +43,43 @@ export const AuthPage = () => {
       setTelegramLoading(false)
       return
     }
-    const timer = setTimeout(() => {
-      authTelegram(getInitData())
+    let cancelled = false
+    let attempts = 0
+    const maxAttempts = 25
+
+    const tryAuth = () => {
+      if (cancelled) return
+      const initData = getInitData()
+      if (!initData) {
+        attempts += 1
+        if (attempts < maxAttempts) {
+          setTimeout(tryAuth, 150)
+          return
+        }
+        setTelegramError('Не удалось получить данные Telegram. Закройте и откройте Mini App снова.')
+        setTelegramLoading(false)
+        return
+      }
+      authTelegram(initData)
         .then(({ user: apiUser, token }) => {
+          if (cancelled) return
           const u = apiUserToUser(apiUser)
           setUser(u, token)
           setTelegramLoading(false)
           goAfterAuth()
         })
         .catch((e) => {
+          if (cancelled) return
           setTelegramError(e instanceof Error ? e.message : 'Ошибка входа')
           setTelegramLoading(false)
         })
-    }, 200)
-    return () => clearTimeout(timer)
+    }
+
+    const timer = setTimeout(tryAuth, 200)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [navigate, setUser])
 
   const onSubmit = (e: FormEvent) => {
