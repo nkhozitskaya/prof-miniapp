@@ -1,11 +1,18 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { getStoredTelegramToken, setStoredRole, type AppRole } from '../lib/storage'
+import { getStoredRole, getStoredTelegramToken, setStoredRole, type AppRole } from '../lib/storage'
 import { saveUserProfile } from '../lib/api'
 
 export function StartPage() {
   const { user } = useUser()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const role = getStoredRole()
+    if (!role || !user) return
+    navigate(role === 'parent' ? '/parent' : '/child', { replace: true })
+  }, [navigate, user])
 
   const pick = (role: AppRole) => {
     setStoredRole(role)
