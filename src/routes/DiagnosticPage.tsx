@@ -70,9 +70,10 @@ export const DiagnosticPage = () => {
     if (step > 0) setStep((s) => s - 1)
   }
 
+  /* Высота экрана минус нижнее меню AppLayout (navHeight), чтобы «Далее» всегда было в зоне видимости */
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-4 flex flex-col">
-      <div className="max-w-xl mx-auto w-full flex-1 flex flex-col">
+    <div className="bg-slate-900 text-white px-4 pt-4 pb-2 flex flex-col min-h-0 max-h-[calc(100dvh-4.5rem)] h-[calc(100dvh-4.5rem)]">
+      <div className="max-w-xl mx-auto w-full flex flex-col min-h-0 flex-1">
         <header className="flex items-center justify-between shrink-0">
           <button
             type="button"
@@ -92,12 +93,12 @@ export const DiagnosticPage = () => {
           </p>
         )}
 
-        <div className="mt-4 flex-1">
+        <div className="mt-4 flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 -mr-1">
           <h2 className="text-lg font-semibold mb-3">{station.title}</h2>
           <p className="text-xs text-slate-400 mb-3">
             Выбери 2 варианта ({selected.length}/2)
           </p>
-          <ul className="space-y-2">
+          <ul className="space-y-2 pb-2">
             {station.options.map((opt) => {
               const isSelected = selected.includes(opt.id)
               return (
@@ -122,12 +123,12 @@ export const DiagnosticPage = () => {
           </ul>
         </div>
 
-        <div className="mt-6 flex gap-2 shrink-0">
+        <div className="shrink-0 pt-3 mt-2 border-t border-slate-700/80 bg-slate-900 flex gap-2 pb-[env(safe-area-inset-bottom,0px)]">
           {step > 0 && (
             <button
               type="button"
               onClick={handleBack}
-              className="py-2 px-4 rounded bg-slate-700 hover:bg-slate-600 font-medium"
+              className="py-3 min-h-11 px-4 rounded-lg bg-slate-700 hover:bg-slate-600 font-medium text-base"
             >
               Назад
             </button>
@@ -136,7 +137,7 @@ export const DiagnosticPage = () => {
             type="button"
             disabled={!canProceed || submitting}
             onClick={handleNext}
-            className={`flex-1 py-2 rounded font-medium transition-colors ${
+            className={`flex-1 py-3 min-h-11 rounded-lg font-medium text-base transition-colors ${
               canProceed && !submitting
                 ? 'bg-emerald-500 hover:bg-emerald-600'
                 : 'bg-slate-600 cursor-not-allowed text-slate-400'
