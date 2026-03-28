@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { useDiagnosticResults } from '../hooks/useDiagnosticResults'
-import { getStoredTelegramToken, clearStoredRole, setStoredTelegramUser } from '../lib/storage'
-import { getAccountDebug, getUserProfile, saveUserProfile } from '../lib/api'
 import { TENDENCY_LABELS } from '../utils/diagnosticScore'
 import type { DiagnosticResult, LegacyDiagnosticResult, TendencyId } from '../types'
 
@@ -92,49 +90,12 @@ function ResultCardLegacy({ r }: { r: LegacyDiagnosticResult }) {
 export const ProfilePage = () => {
   const { user, setUser } = useUser()
   const navigate = useNavigate()
-  const token = useMemo(() => getStoredTelegramToken(), [])
-  const [profileSaving, setProfileSaving] = useState(false)
-  const [profileMsg, setProfileMsg] = useState<string | null>(null)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
-  const [profileName, setProfileName] = useState('')
-  const [profileAge, setProfileAge] = useState('')
-  const [profilePhone, setProfilePhone] = useState('')
-  const [profileEmail, setProfileEmail] = useState('')
 
   useEffect(() => {
     if (!user) {
       navigate('/auth', { replace: true })
     }
   }, [user, navigate])
-
-  useEffect(() => {
-    if (!user) return
-    setProfileName(user.name ?? '')
-    setProfileAge(user.age != null ? String(user.age) : '')
-  }, [user])
-
-  useEffect(() => {
-    if (!token || !user) return
-    getUserProfile(token)
-      .then((p) => {
-        if (!p) return
-        const merged = {
-          ...user,
-          name: p.display_name ?? user.name,
-          age: p.age ?? user.age,
-          phone: p.phone ?? user.phone,
-          email: p.email ?? user.email,
-          role: p.role ?? user.role,
-        }
-        setUser(merged, token)
-        setStoredTelegramUser(merged)
-        setProfileName(merged.name)
-        setProfileAge(merged.age != null ? String(merged.age) : '')
-        setProfilePhone(merged.phone ?? '')
-        setProfileEmail(merged.email ?? '')
-      })
-      .catch(() => {})
-  }, [token, user?.id])
 
   if (!user) return null
 
@@ -150,14 +111,16 @@ export const ProfilePage = () => {
               {user.name}
               {user.age != null ? `, ${user.age} лет` : ''}
             </p>
+            {user.phone && (
+              <p className="text-xs text-slate-500 mt-1">{user.phone}</p>
+            )}
           </div>
           <button
             type="button"
             className="text-sm text-red-300 hover:text-red-200 underline"
             onClick={() => {
-              clearStoredRole()
               setUser(null)
-              navigate('/', { replace: true })
+              navigate('/auth')
             }}
           >
             Выйти
@@ -166,160 +129,14 @@ export const ProfilePage = () => {
 
         <button
           type="button"
-          className="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
-          onClick={() => {
-            clearStoredRole()
-            navigate('/', { replace: true })
-          }}
-        >
-          Сменить роль
-        </button>
-
-        <section className="bg-slate-800 rounded-xl p-4 space-y-3">
-          <h2 className="text-lg font-semibold">Мои данные</h2>
-          <input
-            className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-            value={profileName}
-            onChange={(e) => setProfileName(e.target.value)}
-            placeholder="Имя"
-          />
-          <input
-            type="number"
-            min={10}
-            max={99}
-            className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-            value={profileAge}
-            onChange={(e) => setProfileAge(e.target.value)}
-            placeholder="Возраст"
-          />
-          <input
-            className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-            value={profilePhone}
-            onChange={(e) => setProfilePhone(e.target.value)}
-            placeholder="Телефон (необязательно)"
-          />
-          <input
-            type="email"
-            className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 outline-none focus:border-emerald-500"
-            value={profileEmail}
-            onChange={(e) => setProfileEmail(e.target.value)}
-            placeholder="Email (необязательно)"
-          />
-          <button
-            type="button"
-            disabled={profileSaving}
-            className={`w-full py-2 rounded font-medium transition-colors ${
-              profileSaving ? 'bg-slate-600 text-slate-300 cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600'
-            }`}
-            onClick={async () => {
-              const updated = {
-                ...user,
-                name: profileName.trim() || user.name,
-                age: profileAge ? Number(profileAge) : undefined,
-                phone: profilePhone.trim() || undefined,
-                email: profileEmail.trim() || undefined,
-              }
-              setUser(updated, token ?? undefined)
-              if (!token) {
-                setProfileMsg('Сохранено локально.')
-                return
-              }
-              setProfileSaving(true)
-              setProfileMsg(null)
-              try {
-                const p = await saveUserProfile(token, {
-                  displayName: updated.name,
-                  age: updated.age ?? null,
-                  phone: updated.phone ?? '',
-                  email: updated.email ?? '',
-                  role: 'teen',
-                })
-                const merged = {
-                  ...updated,
-                  name: p.display_name ?? updated.name,
-                  age: p.age ?? updated.age,
-                  phone: p.phone ?? updated.phone,
-                  email: p.email ?? updated.email,
-                  role: p.role ?? 'teen',
-                }
-                setUser(merged, token)
-                setStoredTelegramUser(merged)
-                setProfileMsg('Данные сохранены в аккаунте.')
-              } catch (e) {
-                setProfileMsg(e instanceof Error ? e.message : 'Ошибка сохранения')
-              } finally {
-                setProfileSaving(false)
-              }
-            }}
-          >
-            {profileSaving ? 'Сохраняю...' : 'Сохранить данные'}
-          </button>
-          {profileMsg && <p className="text-xs text-slate-300">{profileMsg}</p>}
-          <button
-            type="button"
-            className="w-full py-2 rounded bg-slate-700 hover:bg-slate-600 font-medium transition-colors"
-            onClick={async () => {
-              if (!token) {
-                setDebugInfo('Нет Telegram токена в сессии.')
-                return
-              }
-              try {
-                const d = await getAccountDebug(token)
-                setDebugInfo(JSON.stringify(d, null, 2))
-              } catch (e) {
-                setDebugInfo(e instanceof Error ? e.message : 'Ошибка debug запроса')
-              }
-            }}
-          >
-            Проверить синхронизацию аккаунта
-          </button>
-          {debugInfo && (
-            <pre className="text-[11px] leading-4 p-2 rounded bg-slate-900/60 border border-slate-700 overflow-x-auto whitespace-pre-wrap">
-              {debugInfo}
-            </pre>
-          )}
-        </section>
-
-        <button
-          type="button"
           className="w-full py-2 rounded bg-emerald-500 hover:bg-emerald-600 font-medium transition-colors"
-          onClick={() => navigate('/child/diagnostic')}
+          onClick={() => navigate('/diagnostic')}
         >
-          {results.length > 0 ? 'Пройти диагностику заново' : 'Пройти диагностику'}
-        </button>
-        {results.length > 0 && (
-          <p className="text-xs text-slate-400 text-center">
-            Результат обновится, предыдущий не сохраняется.
-          </p>
-        )}
-
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            className="py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
-            onClick={() => navigate('/child/professions')}
-          >
-            Профессии
-          </button>
-          <button
-            type="button"
-            className="py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
-            onClick={() => navigate('/child/link-parent')}
-          >
-            Привязать родителя
-          </button>
-        </div>
-
-        <button
-          type="button"
-          className="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 font-medium transition-colors border border-slate-700"
-          onClick={() => navigate('/parent')}
-        >
-          Родительский кабинет
+          Пройти диагностику
         </button>
 
         <section className="bg-slate-800 rounded-xl p-4">
-          <h2 className="text-lg font-semibold mb-2">Результат диагностики</h2>
+          <h2 className="text-lg font-semibold mb-2">Результаты диагностики</h2>
           {loading && (
             <p className="text-sm text-slate-400">Загрузка...</p>
           )}

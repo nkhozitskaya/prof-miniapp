@@ -1,49 +1,42 @@
 import { useState } from 'react'
-import { isTelegram } from '../lib/telegram'
 import {
-  getStoredTelegramToken,
-  getStoredTelegramUser,
-  setStoredTelegramToken,
-  setStoredTelegramUser,
-  clearStoredTelegram,
+  getSessionToken,
+  getSessionUser,
+  setSessionToken,
+  setSessionUser,
+  clearSession,
 } from '../lib/storage'
 import type { User } from '../types'
 
-const USER_KEY = 'prof_app_user'
-
 export function getStoredUser(): User | null {
-  if (isTelegram()) {
-    const u = getStoredTelegramUser()
-    if (u && getStoredTelegramToken()) return u
-    return null
+  const t = getSessionToken()
+  const u = getSessionUser()
+  if (t && u) {
+    return {
+      id: u.id,
+      name: u.name,
+      age: u.age,
+      phone: u.phone,
+    }
   }
-  const raw = localStorage.getItem(USER_KEY)
-  if (!raw) return null
-  try {
-    return JSON.parse(raw) as User
-  } catch {
-    return null
-  }
+  return null
 }
 
 export function useUser() {
   const [user, setUserState] = useState<User | null>(() => getStoredUser())
 
-  const setUser = (u: User | null, telegramToken?: string) => {
+  const setUser = (u: User | null, token?: string) => {
     setUserState(u)
-    if (isTelegram()) {
-      if (u && telegramToken) {
-        setStoredTelegramToken(telegramToken)
-        setStoredTelegramUser(u)
-      } else {
-        clearStoredTelegram()
-      }
+    if (u && token) {
+      setSessionToken(token)
+      setSessionUser({
+        id: u.id,
+        name: u.name,
+        age: u.age,
+        phone: u.phone,
+      })
     } else {
-      if (u) {
-        localStorage.setItem(USER_KEY, JSON.stringify(u))
-      } else {
-        localStorage.removeItem(USER_KEY)
-      }
+      clearSession()
     }
   }
 

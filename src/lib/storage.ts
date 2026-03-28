@@ -1,47 +1,58 @@
-/** Ключи и хранение для режима Telegram (токен + пользователь с бэкенда) */
+/** Единая сессия API: JWT + пользователь (Telegram Mini App и браузер по телефону). */
 
-const TELEGRAM_TOKEN_KEY = 'prof_app_telegram_token'
-const TELEGRAM_USER_KEY = 'prof_app_telegram_user'
-const ROLE_KEY = 'prof_app_role'
+import { isJwtExpired } from './jwtExpiry'
 
-export type AppRole = 'teen' | 'parent'
+const SESSION_TOKEN_KEY = 'prof_app_session_token'
+const SESSION_USER_KEY = 'prof_app_session_user'
 
-export function getStoredTelegramToken(): string | null {
-  return localStorage.getItem(TELEGRAM_TOKEN_KEY)
+const LEGACY_TELEGRAM_TOKEN = 'prof_app_telegram_token'
+const LEGACY_TELEGRAM_USER = 'prof_app_telegram_user'
+
+function migrateLegacyTelegramKeys(): void {
+  const t = localStorage.getItem(LEGACY_TELEGRAM_TOKEN)
+  const u = localStorage.getItem(LEGACY_TELEGRAM_USER)
+  if (t && u && !localStorage.getItem(SESSION_TOKEN_KEY)) {
+    localStorage.setItem(SESSION_TOKEN_KEY, t)
+    localStorage.setItem(SESSION_USER_KEY, u)
+  }
+  if (t) localStorage.removeItem(LEGACY_TELEGRAM_TOKEN)
+  if (u) localStorage.removeItem(LEGACY_TELEGRAM_USER)
 }
 
-export function setStoredTelegramToken(token: string): void {
-  localStorage.setItem(TELEGRAM_TOKEN_KEY, token)
+export function getSessionToken(): string | null {
+  migrateLegacyTelegramKeys()
+  const t = localStorage.getItem(SESSION_TOKEN_KEY)
+  if (t && isJwtExpired(t)) {
+    clearSession()
+    return null
+  }
+  return t
 }
 
-export function clearStoredTelegram(): void {
-  localStorage.removeItem(TELEGRAM_TOKEN_KEY)
-  localStorage.removeItem(TELEGRAM_USER_KEY)
+export function setSessionToken(token: string): void {
+  localStorage.setItem(SESSION_TOKEN_KEY, token)
 }
 
-export function getStoredTelegramUser(): { id: string; name: string; age?: number } | null {
-  const raw = localStorage.getItem(TELEGRAM_USER_KEY)
+export function getSessionUser(): { id: string; name: string; age?: number; phone?: string } | null {
+  migrateLegacyTelegramKeys()
+  const raw = localStorage.getItem(SESSION_USER_KEY)
   if (!raw) return null
   try {
-    return JSON.parse(raw) as { id: string; name: string; age?: number }
+    return JSON.parse(raw) as { id: string; name: string; age?: number; phone?: string }
   } catch {
     return null
   }
 }
 
-export function setStoredTelegramUser(user: { id: string; name: string; age?: number }): void {
-  localStorage.setItem(TELEGRAM_USER_KEY, JSON.stringify(user))
+export function setSessionUser(user: { id: string; name: string; age?: number; phone?: string }): void {
+  localStorage.setItem(SESSION_USER_KEY, JSON.stringify(user))
 }
 
-export function getStoredRole(): AppRole | null {
-  const v = localStorage.getItem(ROLE_KEY)
-  return v === 'teen' || v === 'parent' ? v : null
-}
-
-export function setStoredRole(role: AppRole): void {
-  localStorage.setItem(ROLE_KEY, role)
-}
-
-export function clearStoredRole(): void {
-  localStorage.removeItem(ROLE_KEY)
+export function clearSession(): void {
+  localStorage.removeItem(SESSION_TOKEN_KEY)
+  localStorage.removeItem(SESSION_USER_KEY)
+  localStorage.removeItem(LEGACY_TELEGRAM_TOKEN)
+  localStorage.removeItem(LEGACY_TELEGRAM_USER)
+  localStorage.removeItem('prof_app_user')
+  localStorage.removeItem('prof_app_diagnostic_results')
 }

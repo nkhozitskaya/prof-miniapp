@@ -127,22 +127,40 @@ Deno.serve(async (req) => {
 
   const { data: existing } = await supabase
     .from('users')
-    .select('id, telegram_user_id, first_name, last_name, username')
+    .select('id, telegram_user_id, phone, first_name, last_name, username, age')
     .eq('telegram_user_id', String(tgUser.id))
     .single()
 
   let userId: string
-  let row: { id: string; telegram_user_id: number; first_name: string | null; last_name: string | null; username: string | null }
+  let row: {
+    id: string
+    telegram_user_id: number | null
+    phone: string | null
+    first_name: string | null
+    last_name: string | null
+    username: string | null
+    age: number | null
+  }
 
   if (existing) {
-    userId = existing.id
-    row = {
-      id: existing.id,
-      telegram_user_id: existing.telegram_user_id,
-      first_name: existing.first_name,
-      last_name: existing.last_name,
-      username: existing.username,
+    const { data: refreshed, error: updateError } = await supabase
+      .from('users')
+      .update({
+        first_name: tgUser.first_name ?? null,
+        last_name: tgUser.last_name ?? null,
+        username: tgUser.username ?? null,
+      })
+      .eq('id', existing.id)
+      .select('id, telegram_user_id, phone, first_name, last_name, username, age')
+      .single()
+    if (updateError) {
+      return new Response(JSON.stringify({ error: updateError.message }), {
+        status: 500,
+        headers: { ...cors, 'Content-Type': 'application/json' },
+      })
     }
+    userId = refreshed.id
+    row = refreshed
   } else {
     const { data: inserted, error } = await supabase
       .from('users')
@@ -152,7 +170,7 @@ Deno.serve(async (req) => {
         last_name: tgUser.last_name ?? null,
         username: tgUser.username ?? null,
       })
-      .select('id, telegram_user_id, first_name, last_name, username')
+      .select('id, telegram_user_id, phone, first_name, last_name, username, age')
       .single()
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
@@ -167,27 +185,16 @@ Deno.serve(async (req) => {
   const jwtSecret = Deno.env.get('JWT_SECRET') ?? Deno.env.get('SUPABASE_JWT_SECRET') ?? 'change-me'
   const token = await signToken({ sub: userId, exp: Math.floor(Date.now() / 1000) + 30 * 24 * 3600 }, jwtSecret)
 
-  // Ensure profile row exists, so account metadata can persist across sessions/devices.
-  const displayName = [row.first_name, row.last_name].filter(Boolean).join(' ') || row.username || null
-  await supabase
-    .from('user_profiles')
-    .upsert(
-      {
-        user_id: userId,
-        display_name: displayName,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    )
-
   return new Response(
     JSON.stringify({
       user: {
         id: row.id,
         telegram_user_id: row.telegram_user_id,
+        phone: row.phone,
         first_name: row.first_name,
         last_name: row.last_name,
         username: row.username,
+        age: row.age,
       },
       token,
     }),

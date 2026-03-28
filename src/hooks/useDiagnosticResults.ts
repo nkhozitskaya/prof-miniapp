@@ -14,7 +14,7 @@ export function useDiagnosticResults(userId: string | null) {
     }
     setLoading(true)
     try {
-      const list = await getUserDiagnosticResults(userId)
+      const list = await getUserDiagnosticResults()
       setResults(list)
     } catch {
       setResults([])

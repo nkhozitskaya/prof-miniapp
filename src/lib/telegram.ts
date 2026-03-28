@@ -7,7 +7,6 @@ declare global {
         ready: () => void
         expand: () => void
         close: () => void
-        requestContact?: (callback?: (sent: boolean) => void) => void
         themeParams?: {
           bg_color?: string
           text_color?: string
@@ -23,15 +22,8 @@ declare global {
 
 export function isTelegram(): boolean {
   if (typeof window === 'undefined') return false
-  return Boolean(window.Telegram?.WebApp)
-}
-
-/** Более мягкая проверка клиента Telegram (для раннего этапа инициализации WebApp). */
-export function isTelegramClient(): boolean {
-  if (typeof window === 'undefined') return false
-  if (window.Telegram?.WebApp) return true
-  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
-  return /Telegram/i.test(ua)
+  const twa = window.Telegram?.WebApp
+  return Boolean(twa?.initData)
 }
 
 export function getInitData(): string {
@@ -49,17 +41,4 @@ export function readyTelegram() {
     twa.ready()
     twa.expand()
   }
-}
-
-/** Запросить у пользователя подтверждение передачи телефона в Telegram. */
-export async function requestTelegramContact(): Promise<boolean> {
-  const twa = getWebApp()
-  if (!twa?.requestContact) return false
-  return new Promise((resolve) => {
-    try {
-      twa.requestContact?.((sent) => resolve(Boolean(sent)))
-    } catch {
-      resolve(false)
-    }
-  })
 }

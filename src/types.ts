@@ -2,9 +2,8 @@ export type User = {
   id: string
   name: string
   age?: number
-  email?: string
+  /** E.164, из БД (вход по телефону или привязка позже) */
   phone?: string
-  role?: 'teen' | 'parent'
 }
 
 /** Подшкалы (12) — сырые баллы после выбора вариантов */

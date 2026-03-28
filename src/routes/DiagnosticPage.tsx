@@ -42,7 +42,7 @@ export const DiagnosticPage = () => {
       setSubmitting(true)
       const computed = computeDiagnosticResult(user.id, selectedByStation)
       try {
-        const save = saveDiagnosticResult(user.id, {
+        const save = saveDiagnosticResult({
           subscales: computed.subscales,
           tendencies: computed.tendencies,
           zonesSupport: computed.zonesSupport,
@@ -54,7 +54,7 @@ export const DiagnosticPage = () => {
         if (save && typeof (save as Promise<unknown>).then === 'function') {
           await (save as Promise<void>)
         }
-        navigate('/child')
+        navigate('/profile')
       } catch (e) {
         console.error(e)
         alert('Не удалось сохранить результат. Проверьте интернет и попробуйте снова.')
@@ -77,7 +77,7 @@ export const DiagnosticPage = () => {
           <button
             type="button"
             className="text-sm text-slate-300 hover:text-white underline"
-            onClick={() => navigate('/child')}
+            onClick={() => navigate('/profile')}
           >
             В ЛК
           </button>
@@ -87,14 +87,9 @@ export const DiagnosticPage = () => {
         </header>
 
         {step === 0 && (
-          <div className="mt-3 space-y-2 shrink-0">
-            <p className="text-sm text-slate-300">
-              {DIAGNOSTIC_INSTRUCTION}
-            </p>
-            <p className="text-xs text-slate-400">
-              При повторном прохождении текущий результат будет обновлён.
-            </p>
-          </div>
+          <p className="mt-3 text-sm text-slate-300 shrink-0">
+            {DIAGNOSTIC_INSTRUCTION}
+          </p>
         )}
 
         <div className="mt-4 flex-1">

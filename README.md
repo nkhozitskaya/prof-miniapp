@@ -52,11 +52,20 @@ npx supabase functions deploy
 ### 3. Миграции и таблицы
 
 - **Через CLI:** `npx supabase db push` (см. [SUPABASE_CLI.md](./SUPABASE_CLI.md)).
-- **Вручную:** в Supabase → **SQL Editor** выполни содержимое `supabase/migrations/20250310000001_init.sql`.
+- **Вручную:** в Supabase → **SQL Editor** выполни по порядку `20250310000001_init.sql`, затем `20260329000001_users_phone.sql`.
+
+**Что хранится в PostgreSQL (минимальный MVP):**
+
+| Таблица | Назначение |
+|---------|------------|
+| `users` | Telegram: `telegram_user_id` (уникален, если есть). Браузер: вход по **телефону** (`phone` уникален), имя и опционально `age`. У пользователя должен быть задан либо Telegram id, либо телефон. Edge: `telegram-auth`, `phone-auth`. |
+| `diagnostic_results` | Результаты: `user_id` → FK на `users.id`. При новом прохождении старые строки этого пользователя удаляются, сохраняется один актуальный результат (Edge `diagnostic`). |
+
+В браузере после входа по телефону данные так же идут в Supabase (JWT в `localStorage`). SMS-подтверждение номера в MVP **не** реализовано — номер считается логином при первом вводе.
 
 ### 4. Edge Functions и секреты
 
-- Деплой через CLI: `npx supabase functions deploy` (подробнее в [SUPABASE_CLI.md](./SUPABASE_CLI.md)).
+- Деплой через CLI: `npx supabase functions deploy` — функции `telegram-auth`, `phone-auth`, `diagnostic` (подробнее в [SUPABASE_CLI.md](./SUPABASE_CLI.md)).
 - Секреты: **Dashboard** → **Edge Functions** → **Secrets** — добавь `TELEGRAM_BOT_TOKEN` и `JWT_SECRET`.
 
 ### 5. Переменные окружения для сборки фронта
@@ -74,12 +83,12 @@ prof-miniapp/
 ├── src/
 │   ├── routes/          # Страницы: Auth, Profile, Diagnostic
 │   ├── hooks/            # useUser, useDiagnostic, useDiagnosticResults
-│   ├── lib/              # telegram, api, storage
+│   ├── lib/              # telegram, api, storage, phone
 │   ├── data/             # 11 станций диагностики
 │   └── utils/             # Подсчёт баллов и зон
 ├── supabase/
 │   ├── migrations/       # SQL: users, diagnostic_results
-│   └── functions/       # Edge Functions: telegram-auth, diagnostic
+│   └── functions/       # telegram-auth, phone-auth, diagnostic
 ├── .env.example         # Пример переменных (без секретов)
 ├── TELEGRAM_SETUP.md    # Подробная настройка бота и Mini App
 └── README.md

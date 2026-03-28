@@ -4,15 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { readyTelegram } from './lib/telegram'
 import { AppLayout } from './components/AppLayout'
 import { AuthPage } from './routes/AuthPage'
-import { StartPage } from './routes/StartPage'
-import { OnboardingPage } from './routes/OnboardingPage'
+import { HomeRedirect } from './routes/HomeRedirect'
 import { ProfilePage } from './routes/ProfilePage'
-import { LinkParentPage } from './routes/LinkParentPage'
 import { ProfessionsPage } from './routes/ProfessionsPage'
 import { DiagnosticPage } from './routes/DiagnosticPage'
-import { ParentCabinetPage } from './routes/ParentCabinetPage'
-import { ParentChildPage } from './routes/ParentChildPage'
-import { ParentDiagnosticPage } from './routes/ParentDiagnosticPage'
 
 const queryClient = new QueryClient()
 
@@ -29,21 +24,12 @@ function AppInit() {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<StartPage />} />
+      <Route path="/" element={<HomeRedirect />} />
       <Route path="/auth" element={<AuthPage />} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
       <Route element={<AppLayout />}>
-        {/* Child area */}
-        <Route path="child" element={<ProfilePage />} />
-        <Route path="child/link-parent" element={<LinkParentPage />} />
-        <Route path="child/professions" element={<ProfessionsPage />} />
-        <Route path="child/diagnostic" element={<DiagnosticPage />} />
-
-        {/* Parent area */}
-        <Route path="parent/diagnostic" element={<ParentDiagnosticPage />} />
-        <Route path="parent" element={<ParentCabinetPage />} />
-        <Route path="parent/children" element={<ParentCabinetPage />} />
-        <Route path="parent/child/:childId" element={<ParentChildPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="professions" element={<ProfessionsPage />} />
+        <Route path="diagnostic" element={<DiagnosticPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

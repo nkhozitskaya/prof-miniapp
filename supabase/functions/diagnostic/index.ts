@@ -120,11 +120,8 @@ Deno.serve(async (req) => {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
-    // Пересохраняем: удаляем старые результаты пользователя, сохраняем один новый
-    const { error: deleteError } = await supabase
-      .from('diagnostic_results')
-      .delete()
-      .eq('user_id', userId)
+    // Один актуальный результат на пользователя: удаляем старые строки, затем вставляем новую (FK user_id → users.id).
+    const { error: deleteError } = await supabase.from('diagnostic_results').delete().eq('user_id', userId)
     if (deleteError) {
       return new Response(JSON.stringify({ error: deleteError.message }), {
         status: 500,
