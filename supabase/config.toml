@@ -8,6 +8,16 @@ schemas = ["public"]
 [db]
 port = 54322
 
-[functions]
-# Секреты (TELEGRAM_BOT_TOKEN, JWT_SECRET) задаются в Dashboard → Edge Functions → Secrets
-# или через: supabase secrets set TELEGRAM_BOT_TOKEN=xxx
+# Секреты Edge Functions: Dashboard → Secrets или supabase secrets set
+#
+# verify_jwt = false: шлюз не требует JWT Supabase Auth. У нас свой Bearer-токен в diagnostic;
+# telegram-auth и phone-auth — без заголовка Authorization.
+
+[functions.telegram-auth]
+verify_jwt = false
+
+[functions.phone-auth]
+verify_jwt = false
+
+[functions.diagnostic]
+verify_jwt = false
